@@ -290,3 +290,27 @@ def take_contract(contract_id: int, data: TakeContractRequest, db: DbSession):
     db.commit()
     db.refresh(contract)
     return contract
+
+
+@app.post("/contracts/{contract_id}/complete", response_model=ContractRead)
+def complete_contract(contract_id: int, db: DbSession):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    if contract.status != ContractStatus.IN_PROGRESS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only contracts with IN_PROGRESS status can be completed"
+        )
+
+    contract.status = ContractStatus.COMPLETED
+
+    if contract.mercenary_id:
+        mercenary = db.get(Mercenary, contract.mercenary_id)
+        if mercenary:
+            mercenary.balance += contract.reward
+
+    db.commit()
+    db.refresh(contract)
+    return contract
