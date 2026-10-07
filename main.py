@@ -5,8 +5,9 @@ from typing import Annotated
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Boolean, Float, String, create_engine, select, Enum as SQLEnum
+from sqlalchemy import Boolean, Float, Integer, String, create_engine, select, Enum as SQLEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+import enum
 
 
 
@@ -46,7 +47,21 @@ class Base(DeclarativeBase):
     pass
 
 
+class ContractStatus(str, enum.Enum):
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
+
+class Mercenary(Base):
+    __tablename__ = "mercenaries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nickname: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    level: Mapped[int] = mapped_column(Integer, default=1)
+    reputation: Mapped[int] = mapped_column(Integer, default=0)
+    balance: Mapped[float] = mapped_column(Float, default=0.0)
 
 
 
