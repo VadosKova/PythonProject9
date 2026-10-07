@@ -182,3 +182,34 @@ def get_mercenary(mercenary_id: int, db: DbSession):
     if not mercenary:
         raise HTTPException(status_code=404, detail="Mercenary not found")
     return mercenary
+
+
+@app.post("/contracts", response_model=ContractRead, status_code=status.HTTP_201_CREATED)
+def create_contract(data: ContractCreate, db: DbSession):
+    contract = Contract(**data.model_dump(), status=ContractStatus.OPEN)
+    db.add(contract)
+    db.commit()
+    db.refresh(contract)
+    return contract
+
+
+@app.get("/contracts", response_model=list[ContractRead])
+def get_contracts(
+    db: DbSession,
+    status: ContractStatus | None = None,
+    district: str | None = None,
+    min_reward: float | None = Query(default=None, ge=0),
+    max_difficulty: int | None = Query(default=None, ge=1, le=10),
+):
+    statement = select(Contract)
+
+    if status is not None:
+        statement = statement.where(Contract.status == status)
+    if district is not None:
+        statement = statement.where(Contract.district == district)
+    if min_reward is not None:
+        statement = statement.where(Contract.reward >= min_reward)
+    if max_difficulty is not None:
+        statement = statement.where(Contract.difficulty <= max_difficulty)
+
+    return db.scalars(statement).all()
