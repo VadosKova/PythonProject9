@@ -260,3 +260,33 @@ def delete_contract(contract_id: int, db: DbSession):
     db.delete(contract)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.post("/contracts/{contract_id}/take", response_model=ContractRead)
+def take_contract(contract_id: int, data: TakeContractRequest, db: DbSession):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    if contract.status != ContractStatus.OPEN:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Contract cannot be taken because its status is {contract.status}"
+        )
+
+    mercenary = db.get(Mercenary, data.mercenary_id)
+    if not mercenary:
+        raise HTTPException(status_code=404, detail="Mercenary not found")
+
+    if contract.difficulty > mercenary.level:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Mercenary level ({mercenary.level}) is too low for contract difficulty ({contract.difficulty})"
+        )
+
+    contract.status = ContractStatus.IN_PROGRESS
+    contract.mercenary_id = mercenary.id
+
+    db.commit()
+    db.refresh(contract)
+    return contract
