@@ -234,3 +234,29 @@ def get_contract(contract_id: int, db: DbSession):
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
     return contract
+
+
+@app.patch("/contracts/{contract_id}", response_model=ContractRead)
+def update_contract(contract_id: int, data: ContractUpdate, db: DbSession):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    changes = data.model_dump(exclude_unset=True)
+    for field_name, value in changes.items():
+        setattr(contract, field_name, value)
+
+    db.commit()
+    db.refresh(contract)
+    return contract
+
+
+@app.delete("/contracts/{contract_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_contract(contract_id: int, db: DbSession):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    db.delete(contract)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
