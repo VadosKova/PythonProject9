@@ -111,6 +111,23 @@ class ContractUpdate(BaseModel):
     district: str | None = Field(default=None, min_length=2, max_length=80)
 
 
+class ContractRead(BaseModel):
+    id: int
+    title: str
+    description: str
+    difficulty: int
+    reward: float
+    district: str
+    status: ContractStatus
+    mercenary_id: int | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TakeContractRequest(BaseModel):
+    mercenary_id: int
+
+
 def get_db():
     db = SessionLocal()
     try:
