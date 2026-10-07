@@ -64,6 +64,20 @@ class Mercenary(Base):
     balance: Mapped[float] = mapped_column(Float, default=0.0)
 
 
+class Contract(Base):
+    __tablename__ = "contracts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(120), index=True)
+    description: Mapped[str] = mapped_column(String(500))
+    difficulty: Mapped[int] = mapped_column(Integer)
+    reward: Mapped[float] = mapped_column(Float)
+    district: Mapped[str] = mapped_column(String(80), index=True)
+    status: Mapped[ContractStatus] = mapped_column(
+        SQLEnum(ContractStatus), default=ContractStatus.OPEN, index=True
+    )
+    mercenary_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
 
 def get_db():
     db = SessionLocal()
