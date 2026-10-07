@@ -95,6 +95,20 @@ class MercenaryRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ContractCreate(BaseModel):
+    title: str = Field(min_length=2, max_length=120)
+    description: str = Field(min_length=5, max_length=500)
+    difficulty: int = Field(ge=1, le=10)
+    reward: float = Field(gt=0)
+    district: str = Field(min_length=2, max_length=80)
+
+
+class ContractUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=120)
+    description: str | None = Field(default=None, min_length=5, max_length=500)
+    difficulty: int | None = Field(default=None, ge=1, le=10)
+    reward: float | None = Field(default=None, gt=0)
+    district: str | None = Field(default=None, min_length=2, max_length=80)
 
 
 def get_db():
