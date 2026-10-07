@@ -147,10 +147,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Mini Store API - Neon PostgreSQL",
-    description=(
-        "Lesson example: FastAPI + SQLAlchemy ORM + cloud PostgreSQL in Neon"
-    ),
+    title="MERCNET - Биржа контрактов для наёмников",
+    description=("Закрытая сеть для публикации опасных контрактов и управления наёмниками."),
     version="3.0.0",
     lifespan=lifespan,
 )
@@ -159,8 +157,28 @@ app = FastAPI(
 @app.get("/")
 def root():
     return {
-        "message": "Mini Store API is running",
+        "message": "MERCNET is running",
         "storage": "PostgreSQL via SQLAlchemy ORM",
     }
 
 
+@app.post("/mercenaries", response_model=MercenaryRead, status_code=status.HTTP_201_CREATED)
+def create_mercenary(data: MercenaryCreate, db: DbSession):
+    mercenary = Mercenary(**data.model_dump())
+    db.add(mercenary)
+    db.commit()
+    db.refresh(mercenary)
+    return mercenary
+
+
+@app.get("/mercenaries", response_model=list[MercenaryRead])
+def get_mercenaries(db: DbSession):
+    return db.scalars(select(Mercenary)).all()
+
+
+@app.get("/mercenaries/{mercenary_id}", response_model=MercenaryRead)
+def get_mercenary(mercenary_id: int, db: DbSession):
+    mercenary = db.get(Mercenary, mercenary_id)
+    if not mercenary:
+        raise HTTPException(status_code=404, detail="Mercenary not found")
+    return mercenary
