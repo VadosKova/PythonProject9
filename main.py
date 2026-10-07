@@ -79,6 +79,24 @@ class Contract(Base):
     mercenary_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
+class MercenaryCreate(BaseModel):
+    nickname: str = Field(min_length=2, max_length=80)
+    level: int = Field(default=1, ge=1, le=10)
+    reputation: int = Field(default=0, ge=0)
+    balance: float = Field(default=0.0, ge=0)
+
+
+class MercenaryRead(BaseModel):
+    id: int
+    nickname: str
+    level: int
+    reputation: int
+    balance: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
 def get_db():
     db = SessionLocal()
     try:
