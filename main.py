@@ -213,3 +213,24 @@ def get_contracts(
         statement = statement.where(Contract.difficulty <= max_difficulty)
 
     return db.scalars(statement).all()
+
+
+@app.get("/contracts/best-open", response_model=ContractRead)
+def get_best_open_contract(db: DbSession):
+    open_contracts = db.scalars(
+        select(Contract).where(Contract.status == ContractStatus.OPEN)
+    ).all()
+
+    if not open_contracts:
+        raise HTTPException(status_code=404, detail="No open contracts available")
+
+    best_contract = max(open_contracts, key=lambda c: c.reward / c.difficulty)
+    return best_contract
+
+
+@app.get("/contracts/{contract_id}", response_model=ContractRead)
+def get_contract(contract_id: int, db: DbSession):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    return contract
