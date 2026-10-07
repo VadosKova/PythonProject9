@@ -314,3 +314,21 @@ def complete_contract(contract_id: int, db: DbSession):
     db.commit()
     db.refresh(contract)
     return contract
+
+
+@app.post("/contracts/{contract_id}/fail", response_model=ContractRead)
+def fail_contract(contract_id: int, db: DbSession):
+    contract = db.get(Contract, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    if contract.status != ContractStatus.IN_PROGRESS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only contracts with IN_PROGRESS status can be failed"
+        )
+
+    contract.status = ContractStatus.FAILED
+    db.commit()
+    db.refresh(contract)
+    return contract
